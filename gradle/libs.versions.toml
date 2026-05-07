@@ -8,6 +8,8 @@ battleArtsAPI = "21.15.8.3a"
 epicFightLocal = "ExCapTest"
 dummy = "1.21-2.0.12-neoforge"
 moonlight = "1.21-2.29.33-neoforge"
+parchmentMappings = "2024.11.17"
+
 
 [libraries]
 

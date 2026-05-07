@@ -66,6 +66,11 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
     version = neoforge_version
+
+    parchment {
+        mappingsVersion.set(libs.versions.parchmentMappings.get())
+        minecraftVersion.set("1.21.1")
+    }
     runs {
         create("client") {
             client()

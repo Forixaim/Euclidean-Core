@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 public class EuclideanCore
 {
     public static final String MOD_ID = "euclidean_core";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public EuclideanCore(IEventBus modEventBus, ModContainer modContainer)
     {
