@@ -1,4 +1,4 @@
-package net.forixaim.euclidean_core.math;
+package net.forixaim.euclidia.math;
 
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.ClipContext;

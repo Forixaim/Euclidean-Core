@@ -1,0 +1,31 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "${license}"
+issueTrackerURL = "${issueTracker}"
+
+[[mods]]
+modId = "${modId}"
+version = "${modVersion}"
+displayName = "${displayName}"
+displayURL = "${displayUrl}"
+logoFile = "${modId}_logo.png"
+authors = "${authors}"
+description = "${description}"
+
+[[accessTransformers]]
+file = "META-INF/accesstransformer.cfg"
+
+
+[[dependencies."${modId}"]]
+modId = "neoforge"
+mandatory = true
+versionRange = "[${neoforgeVersion},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${modId}"]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[${minecraft}]"
+ordering = "NONE"
+side = "BOTH"

@@ -1,4 +1,4 @@
-package net.forixaim.euclidean_core;
+package net.forixaim.euclidia;
 
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
@@ -7,13 +7,13 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import org.slf4j.Logger;
 
-@Mod(EuclideanCore.MOD_ID)
-public class EuclideanCore
+@Mod(Euclidia.MOD_ID)
+public class Euclidia
 {
-    public static final String MOD_ID = "euclidean_core";
+    public static final String MOD_ID = "euclidia";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public EuclideanCore(IEventBus modEventBus, ModContainer modContainer)
+    public Euclidia(IEventBus modEventBus, ModContainer modContainer)
     {
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }

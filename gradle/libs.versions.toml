@@ -1,29 +1,53 @@
 [versions]
+#Core Mod Versions
+mod = "21.17.0.1"
+java = "21"
 
+# Minecraft
+minecraft = "1.21.1"
+parchmentMappings = "2024.11.17"
+
+# NeoForge
+neoforge = "21.1.220"
+neoforgeRange = "[21,)"
 moddevgradle = "2.0.134"
-epic-fight = "21.16.4-mc1.21.1-neoforge"
-epicskills = "21.3.1-1.21.1"
+neoform = "1.21.1-20240808.144430"
+
+
+# SpongePowered Mixin
+mixin = "0.8.7"
+
+# Plugins
+mcSafeResources = "0.0.2"
 modPublish = "1.1.0"
-battleArtsAPI = "21.15.8.3a"
-epicFightLocal = "ExCapTest"
+
+# Dependencies
+epic-fight = "21.17.3.1-mc1.21.1-neoforge"
+epicskills = "21.3.1-1.21.1"
+battleArtsAPI = "21.17.7-mc1.21.1-neoforge"
 dummy = "1.21-2.0.12-neoforge"
 moonlight = "1.21-2.29.33-neoforge"
-parchmentMappings = "2024.11.17"
+forgeconfigapiport = "21.1.6"
+ldlib = "mc1.21.1-2.2.17-neoforge"
 
 
 [libraries]
-
+forgeconfigapiport-common = { module = "fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi", version.ref = "forgeconfigapiport" }
 epicFight = { module = "maven.modrinth:epic-fight", version.ref = "epic-fight" }
 epicskills = { module = "maven.modrinth:epic-fight-skill-tree", version.ref = "epicskills"}
 battleArtsAPI = { module = "maven.modrinth:battle-arts-api", version.ref = "battleArtsAPI"}
-epicFightTest = { group = "libs", name = "epicfight", version.ref = "epicFightLocal"}
 dummy = { group = "maven.modrinth", name = "mmmmmmmmmmmm", version.ref = "dummy"}
 moonlight = { group = "maven.modrinth", name = "moonlight", version.ref = "moonlight"}
+ldlib = {group = "maven.modrinth", name = "ldlib", version.ref = "ldlib"}
+
+publisher = { module = "me.modmuss50.mod-publish-plugin:me.modmuss50.mod-publish-plugin.gradle.plugin", version.ref = "modPublish"}
+
 
 [plugins]
-eclipse = { id = "eclipse"}
-idea = { id = "idea"}
-javalib = { id = "java-library"}
+core = {id = "core"}
 #Core Gradle Stuff
 moddevgradle = { id = "net.neoforged.moddev", version.ref = "moddevgradle" }
-publisher = { id = "me.modmuss50.mod-publish-plugin", version.ref = "modPublish"}
+mcSafeResources = { id = "dev.echoellet.mc-safe-resources", version.ref = "mcSafeResources" }
+
+[bundles]
+dummyBundle = ["dummy", "moonlight"]

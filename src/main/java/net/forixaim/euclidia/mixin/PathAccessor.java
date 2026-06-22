@@ -1,4 +1,4 @@
-package net.forixaim.euclidean_core.mixin;
+package net.forixaim.euclidia.mixin;
 
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;

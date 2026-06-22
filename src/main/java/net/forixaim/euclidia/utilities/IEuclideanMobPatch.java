@@ -1,4 +1,4 @@
-package net.forixaim.euclidean_core.utilities;
+package net.forixaim.euclidia.utilities;
 
 /**
  * Marker interface for entities that should use the Euclidean pathfinding post-processor.

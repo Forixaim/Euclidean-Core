@@ -1,7 +1,7 @@
-package net.forixaim.euclidean_core.utilities;
+package net.forixaim.euclidia.utilities;
 
-import net.forixaim.euclidean_core.EuclideanCore;
-import net.forixaim.euclidean_core.mixin.PathAccessor;
+import net.forixaim.euclidia.Euclidia;
+import net.forixaim.euclidia.mixin.PathAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
@@ -15,7 +15,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.forixaim.euclidean_core.math.EuclideanMath.isEuclideanPathClear;
+import static net.forixaim.euclidia.math.EuclideanMath.isEuclideanPathClear;
 
 public class PathfindingUtilities
 {
@@ -45,7 +45,7 @@ public class PathfindingUtilities
             }
             return new Path(smoothed, path.getTarget(), path.canReach());
         }
-        EuclideanCore.LOGGER.warn("Path is not an instance of PathAccessor, returning original path");
+        Euclidia.LOGGER.warn("Path is not an instance of PathAccessor, returning original path");
         return path;
     }
 
