@@ -110,10 +110,10 @@ private fun Project.getFullModVersion(variant: String): String {
     }
     val stageSuffix = when (releaseType) {
         ReleaseType.RELEASE -> ""
-        ReleaseType.BETA    -> "-beta.build-$currentBuildNumber"
-        ReleaseType.ALPHA   -> "-alpha.build-$currentBuildNumber"
+        ReleaseType.BETA    -> "-b-$currentBuildNumber"
+        ReleaseType.ALPHA   -> "-a-$currentBuildNumber"
     }
-    return "$modVersion-mc$mcVersion-$variant$stageSuffix"
+    return "$modVersion-$mcVersion-$variant$stageSuffix"
 }
 enum class ModLoader(val conventionalName: String) {
     NeoForge("neoforge"),
@@ -159,6 +159,14 @@ private fun Project.buildReleaseChangelog(
     }
 }
 
+fun mapReleaseType(type: ReleaseType): me.modmuss50.mpp.ReleaseType {
+    return when(type)
+    {
+        ReleaseType.RELEASE -> me.modmuss50.mpp.ReleaseType.STABLE
+        ReleaseType.ALPHA -> me.modmuss50.mpp.ReleaseType.ALPHA
+        ReleaseType.BETA -> me.modmuss50.mpp.ReleaseType.BETA
+    }
+}
 
 /**
  * Configures the mod publishing to mod sites (e.g., Modrinth, CurseForge).
@@ -189,7 +197,8 @@ fun Project.configureModPublish(
         changelog.set(releaseChangelog)
 
         modLoaders.add(modLoader.conventionalName)
-        type.set(STABLE)
+
+        type.set(mapReleaseType(releaseType))
         displayName.set(project.getFullModVersion(modLoader.conventionalName))
         file.set(jarFile())
         additionalFiles.from(sourcesJar)
@@ -199,9 +208,9 @@ fun Project.configureModPublish(
 
         curseforge {
             accessToken.set(providers.environmentVariable("CURSEFORGE_TOKEN"))
-            projectId.set("405076")
+            projectId.set("1586901")
             minecraftVersions.add(mcVersion)
-            projectSlug.set("epic-fight-mod")
+            projectSlug.set("euclidia")
 
             requiredDependencies.forEach { requires(it) }
             optionalDependencies.forEach { optional(it) }
@@ -209,7 +218,7 @@ fun Project.configureModPublish(
 
         modrinth {
             accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
-            projectId.set("vu3NZ5Ma")
+            projectId.set("ljnO6HVw")
             minecraftVersions.add(mcVersion)
 
             requiredDependencies.forEach { requires(it) }
@@ -219,13 +228,13 @@ fun Project.configureModPublish(
         discord {
             webhookUrl.set(providers.environmentVariable("DISCORD_WEBHOOK"))
             dryRunWebhookUrl.set(providers.environmentVariable("DRY_RUN_DISCORD_WEBHOOK"))
-            username.set("Update Notification")
+            username.set("euclidia updator")
             avatarUrl.set("https://i.imgur.com/FrxDviN.png")
             content.set(
                 changelog.map {
                     buildString {
                         appendLine("<@&1074034800849059930>")
-                        appendLine("# Epic Fight $modVersion is out!")
+                        appendLine("# euclidia $modVersion is out!")
                         appendLine(releaseChangelog)
                     }
                 }
