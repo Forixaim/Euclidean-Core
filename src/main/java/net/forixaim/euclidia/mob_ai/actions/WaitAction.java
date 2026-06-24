@@ -1,37 +1,29 @@
 package net.forixaim.euclidia.mob_ai.actions;
 
+import net.forixaim.euclidia.mob_ai.core.AIController;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
 import java.util.function.Predicate;
 
-public class WaitAction implements IAction
+public class WaitAction extends AbstractTimedAction
 {
-    private int ticks;
-    private Predicate<LivingEntityPatch<?>> condition;
 
-    public WaitAction(int ticks)
-    {
-        this.ticks = ticks;
+    public WaitAction(int duration) {
+        super(duration);
+    }
+
+    public WaitAction(int duration, Predicate<LivingEntityPatch<?>> condition) {
+        super(duration, condition);
     }
 
     @Override
-    public void start(LivingEntityPatch<?> entity)
+    public void start(LivingEntityPatch<?> entity, AIController controller)
     {
 
     }
 
     @Override
-    public void tick(LivingEntityPatch<?> entity)
+    public void stop(LivingEntityPatch<?> entity, AIController controller)
     {
-        ticks--;
-        if (ticks <= 0 || condition.test(entity)) {
-            stop(entity);
-        }
-    }
-
-    @Override
-    public void stop(LivingEntityPatch<?> entity)
-    {
-        ticks = 0;
     }
 }

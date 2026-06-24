@@ -68,6 +68,7 @@ configurations {
 dependencies {
     implementation(libs.epicFight)
     runtimeOnly(libs.bundles.dummyBundle)
+    compileOnly(libs.mimic.compile)
     implementation(libs.epicskills)
     implementation(libs.battleArtsAPI)
     implementation(libs.ldlib)

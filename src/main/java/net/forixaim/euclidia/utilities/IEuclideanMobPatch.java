@@ -1,5 +1,8 @@
 package net.forixaim.euclidia.utilities;
 
+import net.forixaim.euclidia.mob_ai.core.AIController;
+import net.forixaim.euclidia.mob_ai.core.BossBrain;
+
 /**
  * Marker interface for entities that should use the Euclidean pathfinding post-processor.
  * <p>
@@ -10,4 +13,9 @@ package net.forixaim.euclidia.utilities;
  * It is recommended to use this sparingly and only for high-impact entities like Bosses
  * or Elites. While optimized for CPU, it is designed for future offloading to the GPU.
  */
-public interface IEuclideanMobPatch { }
+public interface IEuclideanMobPatch {
+    boolean waiting();
+    AIController controller();
+
+    void onHit();
+}

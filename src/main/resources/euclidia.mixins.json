@@ -4,6 +4,7 @@
   "package": "net.forixaim.euclidia.mixin",
   "refmap": "euclidia.refmap.json",
   "mixins": [
+    "MixinLivingEntityPatch",
     "MixinPathNavigation",
     "PathAccessor"
   ],

@@ -30,6 +30,8 @@ moonlight = "1.21-2.29.33-neoforge"
 forgeconfigapiport = "21.1.6"
 ldlib = "mc1.21.1-2.2.17-neoforge"
 
+mimic-compile = "7760168"
+
 
 [libraries]
 forgeconfigapiport-common = { module = "fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi", version.ref = "forgeconfigapiport" }
@@ -39,6 +41,7 @@ battleArtsAPI = { module = "maven.modrinth:battle-arts-api", version.ref = "batt
 dummy = { group = "maven.modrinth", name = "mmmmmmmmmmmm", version.ref = "dummy"}
 moonlight = { group = "maven.modrinth", name = "moonlight", version.ref = "moonlight"}
 ldlib = {group = "maven.modrinth", name = "ldlib", version.ref = "ldlib"}
+mimic-compile = {group = "curse.maven", name = "epic-fight-the-mimic-1360684", version.ref = "mimic-compile"}
 
 publisher = { module = "me.modmuss50.mod-publish-plugin:me.modmuss50.mod-publish-plugin.gradle.plugin", version.ref = "modPublish"}
 
