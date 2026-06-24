@@ -3,6 +3,8 @@
 mod = "21.17.0.1"
 java = "21"
 
+releaseType = "alpha"
+
 # Minecraft
 minecraft = "1.21.1"
 parchmentMappings = "2024.11.17"

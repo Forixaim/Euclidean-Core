@@ -19,7 +19,7 @@ public record BossSnapshot(
                 general.tradeSuccessRate(),
                 (float) general.totalActiveAggressors(),
                 general.averageOpponentHealth(),
-                general.spacingPressure(),
+                general.corneredRecency(),
                 general.groupAttackConfidence(),
                 shortTerm.recentDamageSustained(),
                 shortTerm.isPoiseProtected(),

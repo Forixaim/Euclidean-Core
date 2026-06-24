@@ -33,6 +33,9 @@ private fun Project.gradleProperty(name: String): String {
 val Project.modVersion: String
     get() = catalogVersion("mod")
 
+val Project.releaseType: ReleaseType
+    get() = ReleaseType.valueOf(catalogVersion("releaseType").uppercase())
+
 private val Project.modLicense: String
     get() = gradleProperty("license")
 
@@ -75,6 +78,9 @@ val Project.groupId: String
 private val Project.neoForgeVersion: String
     get() = catalogVersion("neoforge")
 
+fun toKebabCase(target: String): String = target.replace("_", "-").lowercase()
+
+
 /**
  * Configures the JAR file names to be unique, clear, and consistent.
  */
@@ -84,13 +90,31 @@ fun Project.configureBaseArchive(variant: String) {
         // to keep the JAR file name consistent with the mod project slug URL,
         // and therefore Modrinth will automatically download the sources JAR file: https://support.modrinth.com/en/articles/8801191-modrinth-maven#h_1b24106498
         // This workaround is not needed if the mod ID matches the project slug.
-        archivesName.set("epic-fight")
+        archivesName.set(toKebabCase(modId))
         version = getFullModVersion(variant)
     }
 }
 
-private fun Project.getFullModVersion(variant: String): String = "${modVersion}-mc${mcVersion}-$variant"
 
+
+
+private fun Project.getFullModVersion(variant: String): String {
+    // 1. Read your background build tracking counter
+    val propsFile = file("build.properties")
+    val currentBuildNumber = if (propsFile.exists()) {
+        val props = java.util.Properties()
+        propsFile.inputStream().use { props.load(it) }
+        props.getProperty("buildNumber", "0").toLong()
+    } else {
+        0L
+    }
+    val stageSuffix = when (releaseType) {
+        ReleaseType.RELEASE -> ""
+        ReleaseType.BETA    -> "-beta.build-$currentBuildNumber"
+        ReleaseType.ALPHA   -> "-alpha.build-$currentBuildNumber"
+    }
+    return "$modVersion-mc$mcVersion-$variant$stageSuffix"
+}
 enum class ModLoader(val conventionalName: String) {
     NeoForge("neoforge"),
     ;

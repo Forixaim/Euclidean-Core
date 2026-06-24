@@ -1,3 +1,5 @@
+import java.util.Properties
+
 // Configures shared Gradle setup for the Epic Fight project.
 //
 // Consumers of this Gradle plugin are expected to manually call the following methods:
@@ -21,6 +23,9 @@ java {
     targetCompatibility = JavaVersion.toVersion(javaVersion)
     withSourcesJar()
 }
+
+val propertiesFile: File = rootProject.file("build.properties")
+
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
@@ -71,6 +76,28 @@ repositories {
 }
 
 val jar = tasks.named<Jar>("jar")
+
+val incrementBuild = tasks.register("incrementBuild") {
+    if (propertiesFile.exists()) {
+        val props = Properties()
+        propertiesFile.inputStream().use { props.load(it) }
+
+        // Read, increment, and write safely using standard Long casting
+        val nextBuildNumber = props.getProperty("buildNumber", "0").toLong() + 1
+        props.setProperty("buildNumber", nextBuildNumber.toString())
+
+        propertiesFile.outputStream().use {
+            props.store(it, "Auto-incremented by IncrementBuild Task")
+        }
+        logger.lifecycle("🚀 Build complete. Next build number will be: #$nextBuildNumber")
+    } else {
+        logger.warn("⚠️ build.properties file not found at: ${propertiesFile.absolutePath}")
+    }
+}
+
+jar.configure {
+    finalizedBy(incrementBuild)
+}
 
 tasks.register<SignJar>("signJar") {
 
