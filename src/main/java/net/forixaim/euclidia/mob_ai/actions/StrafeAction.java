@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 public class StrafeAction extends AbstractTimedAction {
     private final boolean circleLeft;
 
+
     public StrafeAction(int duration, boolean circleLeft) {
         super(duration);
         this.circleLeft = circleLeft;
@@ -21,10 +22,21 @@ public class StrafeAction extends AbstractTimedAction {
         this.circleLeft = circleLeft;
     }
 
+    @Override
+    public boolean isEvasive()
+    {
+        return true;
+    }
 
     @Override
     public void start(LivingEntityPatch<?> entity, AIController controller) {
 
+    }
+
+    @Override
+    public boolean interruptible(LivingEntityPatch<?> entity, AIController controller)
+    {
+        return false;
     }
 
     @Override

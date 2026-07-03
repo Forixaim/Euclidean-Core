@@ -19,6 +19,12 @@ public class ComboAttackAction implements IAction {
     }
 
     @Override
+    public boolean isAttack()
+    {
+        return true;
+    }
+
+    @Override
     public void start(LivingEntityPatch<?> entity, AIController controller) {
         timeoutTicks = 20;
         index = 0;

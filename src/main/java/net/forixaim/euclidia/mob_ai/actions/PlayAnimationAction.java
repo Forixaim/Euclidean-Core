@@ -7,12 +7,19 @@ import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
 public class PlayAnimationAction implements IAction
 {
-    private final AnimationManager.AnimationAccessor<? extends StaticAnimation> animation;
+    protected final AnimationManager.AnimationAccessor<? extends StaticAnimation> animation;
     protected int duration;
 
     public PlayAnimationAction(AnimationManager.AnimationAccessor<? extends StaticAnimation> attackAnimation) {
         this.animation = attackAnimation;
-        duration = (int) (attackAnimation.get().getTotalTime() * 20);
+        duration = -1;
+    }
+
+    @Override
+    public void initActions()
+    {
+        IAction.super.initActions();
+        duration = (int) (animation.get().getTotalTime() * 20);
     }
 
     @Override

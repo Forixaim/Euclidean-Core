@@ -49,6 +49,11 @@ public class AIController
         this.forceQueued.set(forceQueued);
     }
 
+    public LivingEntityPatch<?> getOriginal()
+    {
+        return original;
+    }
+
     public Holder<IAction> getActiveAction() {
         return activeAction;
     }
@@ -125,6 +130,7 @@ public class AIController
         }
 
         float finalReward = reward;
+        if (activeAction == null) return;
         this.availableActions.computeIfPresent(activeAction, (action, value) -> finalReward * learningRate);
     }
 
@@ -160,7 +166,7 @@ public class AIController
                 opponent.position(),
                 opponent.getDeltaMovement(),
                 blocking,
-                patch.getOriginal().hurt(opponent.level().damageSources().mobAttack(original.getOriginal()), 0),
+                opponent.isInvulnerableTo(opponent.level().damageSources().mobAttack(original.getOriginal())),
                 patch.getEntityState().attacking(),
                 patch.isStunned(),
                 !opponent.onGround(),
@@ -230,6 +236,16 @@ public class AIController
         }
     }
 
+    @SafeVarargs
+    public final void setAvailableActions(Holder<IAction>... actions)
+    {
+        availableActions.clear();
+        for (Holder<IAction> action : actions)
+        {
+            availableActions.put(action, 0.0f);
+        }
+    }
+
     public Holder<IAction> getDefaultFallbackAction() {
         return Holder.direct(new IdleAction());
     }
@@ -249,7 +265,7 @@ public class AIController
         if (!actionQueue.isEmpty()) {
             Holder<IAction> queuedAction = actionQueue.poll();
 
-            if (activeAction == null || queuedAction.value().interruptible(original, this)) {
+            if (activeAction == null || activeAction.value().interruptible(original, this)) {
                 startAction(queuedAction);
             }
         }

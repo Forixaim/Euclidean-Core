@@ -23,6 +23,8 @@ public interface IAction
         return true;
     }
 
+    default void initActions() {}
+
     void start(LivingEntityPatch<?> entity, AIController controller);
 
     void tick(LivingEntityPatch<?> entity, AIController controller);

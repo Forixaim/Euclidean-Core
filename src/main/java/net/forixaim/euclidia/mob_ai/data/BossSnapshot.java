@@ -6,43 +6,14 @@ public record BossSnapshot(
         ShortTermOpponentParameters shortTermOpponent,
         ShortTermBossParameters shortTermBoss
 ) {
+    public static final int INPUT_SIZE = 38;
     public float[] flattenSnapshotToVector() {
-        GeneralParameters general = this.general();
-        ShortTermBossParameters shortTerm = this.shortTermBoss;
-        ShortTermOpponentParameters opponentShort = this.shortTermOpponent;
-        LongTermOpponentParameters opponentLong = this.longTermOpponent;
-        return new float[] {
-                general.relativeHealthRemaining(),
-                general.combatExhaustion(),
-                general.predictabilityScore(),
-                general.targetEvadeRatio(),
-                general.tradeSuccessRate(),
-                (float) general.totalActiveAggressors(),
-                general.averageOpponentHealth(),
-                general.corneredRecency(),
-                general.groupAttackConfidence(),
-                shortTerm.recentDamageSustained(),
-                shortTerm.isPoiseProtected(),
-                shortTerm.animationRecovery(),
-                shortTerm.currentExecutionTicksNormalized(),
-                shortTerm.targetTrackingError(),
-                opponentShort.willAttack(),
-                opponentShort.willGuard(),
-                opponentShort.willDodge(),
-                opponentShort.willMove(),
-                opponentShort.willStall(),
-                opponentShort.willCloseDistance(),
-                opponentShort.willRetreat(),
-                opponentShort.willFlank(),
-                opponentShort.willCombo(),
-                opponentShort.isVulnerable(),
-                opponentShort.willUseSpecial(),
-                opponentShort.isIsolated(),
-                opponentLong.aggressiveTendency(),
-                opponentLong.defensiveTendency(),
-                opponentLong.evasiveTendency(),
-                opponentLong.panicFactor(),
-                opponentLong.predictability()
-        };
+        int index = 0;
+        float[] networkInputVector = new float[INPUT_SIZE];
+        index = this.general.flattenInto(networkInputVector, index);
+        index = this.shortTermBoss.flattenInto(networkInputVector, index);
+        index = this.shortTermOpponent.flattenInto(networkInputVector, index);
+        this.longTermOpponent.flattenInto(networkInputVector, index);
+        return networkInputVector;
     }
 }

@@ -6,21 +6,32 @@ import yesman.epicfight.api.animation.AnimationManager;
 import yesman.epicfight.api.animation.types.AttackAnimation;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
 
-public class AttackAction extends PlayAnimationAction implements IAttackAction {
+public class AttackAction extends PlayAnimationAction implements IRangedAction {
     private float reach;
     private boolean playing = false;
 
     private Vec3 initialPosition;
 
-    AttackAction(AnimationManager.AnimationAccessor<? extends AttackAnimation> attackAnimation, float initialReach) {
+    public AttackAction(AnimationManager.AnimationAccessor<? extends AttackAnimation> attackAnimation, float initialReach) {
         super(attackAnimation);
-        this.duration = (int) Math.min((attackAnimation.get().phases[attackAnimation.get().phases.length - 1].recovery * 20), attackAnimation.get().getTotalTime() * 20);
+        this.duration = -1;
         this.reach = initialReach;
     }
 
     @Override
-    public float reach() {
-        return reach;
+    public boolean isAttack()
+    {
+        return true;
+    }
+
+
+    @Override
+    public void initActions()
+    {
+        if (animation.get() instanceof AttackAnimation attackAnimation)
+        {
+            duration = (int) Math.min((attackAnimation.phases[attackAnimation.phases.length - 1].recovery * 20), attackAnimation.getTotalTime() * 20);
+        }
     }
 
     @Override
@@ -48,12 +59,13 @@ public class AttackAction extends PlayAnimationAction implements IAttackAction {
     }
 
     @Override
-    public boolean continuous() {
-        return true;
+    public boolean interruptible(LivingEntityPatch<?> entity, AIController controller) {
+        return entity.getEntityState().canBasicAttack();
     }
 
     @Override
-    public boolean interruptible(LivingEntityPatch<?> entity, AIController controller) {
-        return entity.getEntityState().canBasicAttack();
+    public float range()
+    {
+        return reach;
     }
 }

@@ -176,6 +176,9 @@ fun Project.configureModPublish(
     jarFile: () -> Provider<RegularFile>,
 ) {
     val project = this
+    project.tasks.named("publishMods").configure {
+
+    }
     project.tasks.named("publishMods") {
         doLast {
             if (extractCurrentVersionChangelog() == null) {
@@ -211,6 +214,8 @@ fun Project.configureModPublish(
             projectId.set("1586901")
             minecraftVersions.add(mcVersion)
             projectSlug.set("euclidia")
+            client.set(true)
+            server.set(true)
 
             requiredDependencies.forEach { requires(it) }
             optionalDependencies.forEach { optional(it) }
@@ -220,6 +225,7 @@ fun Project.configureModPublish(
             accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
             projectId.set("ljnO6HVw")
             minecraftVersions.add(mcVersion)
+            environment.set(CLIENT_AND_SERVER)
 
             requiredDependencies.forEach { requires(it) }
             optionalDependencies.forEach { optional(it) }

@@ -2,6 +2,7 @@ package net.forixaim.euclidia;
 
 import com.mojang.logging.LogUtils;
 import net.forixaim.euclidia.events.EFEvents;
+import net.forixaim.euclidia.registry.EuclidiaRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -26,6 +27,7 @@ public class Euclidia
     {
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
         modEventBus.addListener(this::onCommonSetup);
+        modEventBus.addListener(EuclidiaRegistries::onNewRegistry);
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event)

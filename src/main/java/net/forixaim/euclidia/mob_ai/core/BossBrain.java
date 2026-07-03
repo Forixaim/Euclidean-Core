@@ -6,6 +6,7 @@ import net.forixaim.euclidia.mob_ai.data.*;
 import net.forixaim.euclidia.registry.MatrixWeights;
 import net.minecraft.core.Holder;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch;
@@ -23,17 +24,20 @@ public class BossBrain
 
     private static final float TEMPERATURE = 0.5f; // Dial down for optimal play, up for chaotic mixups
 
-    private final Bias bossBias;
+    private final ArchetypeBias bossArchetypeBias;
     private boolean idle;
     private boolean disabled;
     private final ActionHistory actionHistory = new ActionHistory();
     private final Map<LivingEntity, OpponentProfile> activeOpponents = new HashMap<>();
-    private GeneralParameters generalParams;
-    private ShortTermBossParameters shortTermParams;
+    private final GeneralParameters generalParams;
+    private final ShortTermBossParameters shortTermParams;
     AtomicInteger decisionCooldown;
 
-    public BossBrain(Bias bossBias) {
-        this.bossBias = bossBias;
+    public BossBrain(ArchetypeBias bossArchetypeBias) {
+        this.bossArchetypeBias = bossArchetypeBias;
+        this.generalParams = new GeneralParameters();
+        this.shortTermParams = new ShortTermBossParameters();
+        decisionCooldown = new AtomicInteger(0);
         setDisabled(false);
         setIdle(true);
     }
@@ -43,26 +47,12 @@ public class BossBrain
         return actionHistory;
     }
 
-    public void handleOnHit(Holder<IAction> currentAction)
-    {
-
-    }
-
-    public void handleForceInterrupt(Holder<IAction> currentAction)
-    {
-
-    }
-
-    public void queueAction(AIController controller, Holder<IAction> action) {
-        controller.queueActionForMainThread(action);
-    }
-
     public boolean isIdle() {
         return idle;
     }
 
-    public Bias getBossBias() {
-        return bossBias;
+    public ArchetypeBias getBossBias() {
+        return bossArchetypeBias;
     }
 
     private float calculateTrackingError(LivingEntityPatch<?> bossPatch, LivingEntity target) {
@@ -78,7 +68,7 @@ public class BossBrain
         return Math.clamp((1.0f - dotProduct) / 2.0f, 0.0f, 1.0f);
     }
 
-    public Holder<IAction> selectBestAction(AIController controller, BossSnapshot snapshot, Bias bias) {
+    public Holder<IAction> selectBestAction(AIController controller, BossSnapshot snapshot, ArchetypeBias archetypeBias) {
         List<Holder<IAction>> movePool = controller.getAvailableActions();
         List<ActionCandidate> candidates = new ArrayList<>();
         float highestScore = -Float.MAX_VALUE;
@@ -88,7 +78,7 @@ public class BossBrain
                 continue;
             }
             float baseScore = calculateDotProduct(action, inputs);
-            float finalScore = applyBiasModifications(action, baseScore, bias);
+            float finalScore = applyBiasModifications(action, baseScore, archetypeBias);
             finalScore += getFromReward(controller, action);
             finalScore -= this.actionHistory.getPenaltyFor(action.value());
             candidates.add(new ActionCandidate(action, finalScore));
@@ -124,19 +114,20 @@ public class BossBrain
     }
 
     private record ActionCandidate(Holder<IAction> action, float score) {}
-    private float applyBiasModifications(Holder<IAction> actionHolder, float baseScore, Bias bias) {
+    private float applyBiasModifications(Holder<IAction> actionHolder, float baseScore, ArchetypeBias archetypeBias) {
         float modificationAmount = 0.0f;
         IAction action = actionHolder.value();
-        if (action.isAttack())              modificationAmount += bias.attackResponsiveness();
-        if (action.isGuardBreak())          modificationAmount += bias.guardPunishBias();
-        if (action.isCommandGrab())         modificationAmount += bias.commandGrabPreference();
-        if (action.isEvasive())             modificationAmount += bias.evasionAnticipationBias();
-        if (action.isParry())               modificationAmount += bias.parryAnticipationBias();
-        if (action.isGapCloser())           modificationAmount += bias.antiStallBias();
-        if (action.isFastCounter())         modificationAmount += bias.aggroVengeanceWeight();
-        if (action.isAggressiveChase())     modificationAmount += bias.bullyWeight();
-        if (action.isPoiseProtected())      modificationAmount += bias.hyperArmorReliance();
-        if (action.isPositioningOnly())     modificationAmount += bias.positioningPreference();
+        if (action.isAttack())              modificationAmount += archetypeBias.attackResponsiveness();
+        if (action.isGuardBreak())          modificationAmount += archetypeBias.guardPunishBias();
+        if (action.isCommandGrab())         modificationAmount += archetypeBias.commandGrabPreference();
+        if (action.isEvasive())             modificationAmount += archetypeBias.evasionAnticipationBias();
+        if (action.isParry())               modificationAmount += archetypeBias.parryAnticipationBias();
+        if (action.isGapCloser())           modificationAmount += archetypeBias.antiStallBias();
+        if (action.isFastCounter())         modificationAmount += archetypeBias.aggroVengeanceWeight();
+        if (action.isAggressiveChase())     modificationAmount += archetypeBias.bullyWeight();
+        if (action.isPoiseProtected())      modificationAmount += archetypeBias.hyperArmorReliance();
+        if (action.isPositioningOnly())     modificationAmount += archetypeBias.positioningPreference();
+        if (action.isZoning())              modificationAmount += archetypeBias.zoningPreference();
         return baseScore + modificationAmount;
     }
     private float calculateDotProduct(Holder<IAction> action, float[] inputs) {
@@ -157,11 +148,12 @@ public class BossBrain
         return dotProductSum;
     }
 
-    //RUNS IN MAIN TICK
     public void baseTick(LivingEntityPatch<?> boss, AIController controller)
     {
         if (disabled) return;
-        LivingEntity primaryTarget = this.selectPrimaryTarget(this.bossBias);
+        controller.getTrackingEntities().forEach(op -> this.activeOpponents.put(op, new OpponentProfile(op)));
+        if (this.activeOpponents.isEmpty()) return;
+        LivingEntity primaryTarget = this.selectPrimaryTarget(this.bossArchetypeBias);
         if (primaryTarget == null) {
             this.idle = true;
             if (boss.getOriginal().tickCount % 20 == 0) {
@@ -170,6 +162,7 @@ public class BossBrain
             }
             return;
         }
+        Set<Projectile> trackingProjectiles = ProjectileManager.getTrackingProjectiles(controller);
         this.idle = false;
         OpponentProfile targetProfile = this.activeOpponents.get(primaryTarget);
         if (targetProfile == null) {
@@ -178,19 +171,10 @@ public class BossBrain
         }
         this.recordOpponentTick(primaryTarget, boss.getOriginal(), controller.createSnapshot(primaryTarget));
         if (boss.getOriginal().tickCount % 20 == 0) {
-            this.generalParams = GeneralUpdater.updateMacroState(
-                    boss,
-                    controller,
-                    this.generalParams,
-                    this.actionHistory
-            );
+            this.generalParams.updateMacroState(boss, controller, shortTermParams);
         }
         float currentTrackingError = calculateTrackingError(boss, primaryTarget);
-        this.shortTermParams = ShortTermBossUpdater.createCurrentSnapshot(
-                boss,
-                this.shortTermParams,
-                currentTrackingError
-        );
+        this.shortTermParams.updateCurrentSnapshot(controller, primaryTarget, currentTrackingError);
         ShortTermOpponentParameters targetTelemetry = targetProfile.getDerivedIntent();
         LongTermOpponentParameters longTermTelemetry = targetProfile.getLongTermStats();
         BossSnapshot multiDimensionalSnapshot = new BossSnapshot(
@@ -211,17 +195,19 @@ public class BossBrain
         controller.setForceQueued(true);
         CompletableFuture.runAsync(() -> {
             try {
-                Holder<IAction> bestAction = this.selectBestAction(controller, multiDimensionalSnapshot, bossBias);
+                Holder<IAction> bestAction = this.selectBestAction(controller, multiDimensionalSnapshot, bossArchetypeBias);
                 controller.queueActionForMainThread(bestAction);
 
             } catch (Exception e) {
                 Euclidia.LOGGER.error(e.getLocalizedMessage());
             } finally {
                 controller.setForceQueued(false);
-                this.decisionCooldown.set(Math.max(0, bossBias.reactionSpeed()));
+                this.decisionCooldown.set(Math.max(0, bossArchetypeBias.reactionSpeed()));
             }
         });
     }
+
+
 
     public void setDisabled(boolean disabled)
     {
@@ -241,28 +227,26 @@ public class BossBrain
     }
     public static class OpponentProfile {
         private final LivingEntity entity;
-        private LongTermOpponentParameters longTermStats;
-        private ShortTermOpponentParameters derivedIntent;
+        private final LongTermOpponentParameters longTermStats;
+        private final ShortTermOpponentParameters derivedIntent;
         private AvoidanceType recommendedAvoidance;
 
         public OpponentProfile(LivingEntity entity) {
             this.entity = entity;
-            this.longTermStats = new LongTermOpponentParameters(0.2f, 0.2f, 0.2f, 0.0f, 0.0f);
-            this.derivedIntent = new ShortTermOpponentParameters(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f);
+            this.longTermStats = new LongTermOpponentParameters();
+            this.derivedIntent = new ShortTermOpponentParameters(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f);
             this.recommendedAvoidance = AvoidanceType.NONE;
         }
 
         public void decay(float decayRate) {
-            this.derivedIntent = this.derivedIntent.decay(decayRate);
+            this.derivedIntent.decay(decayRate);
 
-            if (this.longTermStats != null) {
-                float longTermScale = decayRate / 3600.0f;
-                this.longTermStats = this.longTermStats.applyIntermissionDecay(1.0f - longTermScale);
-            }
+            float longTermScale = decayRate / 3600.0f;
+            this.longTermStats.applyIntermissionDecay(1.0f - longTermScale);
         }
 
         private boolean isFullyDecayed(ShortTermOpponentParameters params) {
-            return params.willAttack() < 0.01f && params.willStall() > 0.99f;
+            return params.willAttack < 0.01f && params.willStall > 0.99f;
         }
 
         public LivingEntity getEntity() { return entity; }
@@ -275,29 +259,19 @@ public class BossBrain
         OpponentProfile profile = activeOpponents.computeIfAbsent(opponent, k -> new OpponentProfile(opponent));
 
         float attentionWeight = this.calculateAttentionWeight(boss, opponent);
-        profile.derivedIntent = profile.derivedIntent.update(snapshot, profile.derivedIntent, boss.position(), attentionWeight);
+        profile.derivedIntent.update(snapshot, boss.position(), attentionWeight);
 
-        profile.longTermStats = updateLongTermTendencies(profile.longTermStats, snapshot);
+        profile.longTermStats.updateLongTermTendencies(profile.derivedIntent);
         profile.recommendedAvoidance = calculateAvoidance(profile.derivedIntent, snapshot);
     }
 
-    private LongTermOpponentParameters updateLongTermTendencies(LongTermOpponentParameters current, OpponentSnapshot snap) {
-        float blendFactor = 0.005f;
-        float nextAggression = current.aggressiveTendency() + ((snap.isAttacking() ? 1f : 0f) - current.aggressiveTendency()) * blendFactor;
-        float nextDefense = current.defensiveTendency() + ((snap.guarding() ? 1f : 0f) - current.defensiveTendency()) * blendFactor;
-        return new LongTermOpponentParameters(
-                nextAggression, nextDefense, current.evasiveTendency(),
-                current.panicFactor(), current.predictability()
-        );
-    }
-
     private AvoidanceType calculateAvoidance(ShortTermOpponentParameters intent, OpponentSnapshot latest) {
-        float interruptUrgency = intent.willAttack() * 0.5f;
+        float interruptUrgency = intent.willAttack * 0.5f;
         float dodgeUrgency = (latest.bossInsideCollider() && latest.isAttacking()) ? 0.9f : 0.0f;
         float blockUrgency = latest.isAttacking() ? 0.6f : 0.0f;
-        float finalInterrupt = interruptUrgency * bossBias.attackResponsiveness();
-        float finalDodge = dodgeUrgency * bossBias.evasionAnticipationBias();
-        float finalBlock = blockUrgency * bossBias.guardPunishBias();
+        float finalInterrupt = interruptUrgency * bossArchetypeBias.attackResponsiveness();
+        float finalDodge = dodgeUrgency * bossArchetypeBias.evasionAnticipationBias();
+        float finalBlock = blockUrgency * bossArchetypeBias.guardPunishBias();
         float maxScore = Math.max(finalInterrupt, Math.max(finalDodge, finalBlock));
         if (maxScore < 0.45f) return AvoidanceType.NONE;
         if (maxScore == finalInterrupt) return AvoidanceType.INTERRUPT;
@@ -305,7 +279,7 @@ public class BossBrain
         return AvoidanceType.BLOCK;
     }
 
-    public LivingEntity selectPrimaryTarget(Bias bossBias) {
+    public LivingEntity selectPrimaryTarget(ArchetypeBias bossArchetypeBias) {
         LivingEntity primeTarget = null;
         float highestThreat = -1.0f;
 
@@ -315,7 +289,7 @@ public class BossBrain
 
             if (opponent == null || !opponent.isAlive()) continue;
 
-            float threat = getThreat(bossBias, profile);
+            float threat = getThreat(bossArchetypeBias, profile);
             if (threat > highestThreat) {
                 highestThreat = threat;
                 primeTarget = opponent;
@@ -338,17 +312,23 @@ public class BossBrain
         return Math.clamp(distanceFactor * fovFactor, 0.0f, 1.0f);
     }
 
-    private static float getThreat(Bias bossBias, OpponentProfile profile) {
+    private static float getThreat(ArchetypeBias bossArchetypeBias, OpponentProfile profile) {
         LongTermOpponentParameters longTerm = profile.getLongTermStats();
         ShortTermOpponentParameters shortTerm = profile.getDerivedIntent();
-        float baseThreat = longTerm.aggressiveTendency() * 2.0f;
-        float vengeanceThreat = shortTerm.willAttack() * bossBias.aggroVengeanceWeight();
+        float baseThreat = longTerm.aggressiveTendency * 2.0f;
+        float vengeanceThreat = shortTerm.willAttack * bossArchetypeBias.aggroVengeanceWeight();
         float threat = baseThreat + vengeanceThreat;
-        if (shortTerm.isVulnerable() > 0.5f) {
-            threat += (shortTerm.isVulnerable() * 1.5f * bossBias.bullyWeight());
+        if (shortTerm.isVulnerable > 0.5f) {
+            threat += (shortTerm.isVulnerable * 1.5f * bossArchetypeBias.bullyWeight());
         }
-        threat += (shortTerm.willCloseDistance() * 0.5f);
+        threat += (shortTerm.willCloseDistance * 0.5f);
         return threat;
+    }
+
+    private void onActionExecute(Holder<IAction> action)
+    {
+        actionHistory.add(action);
+
     }
 
 

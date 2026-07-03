@@ -13,22 +13,27 @@ public class ActionBuilder<T extends IAction>
     // ────────────────────────────────────────────────────────
     private float relativeHealthRemaining    = 0.0f;
     private float combatExhaustion           = -0.15f; // Safe fallback: discourage actions when tired
-    private float predictabilityScore         = 0.0f;
+    private float predictabilityScore        = 0.0f;
     private float targetEvadeRatio           = 0.0f;
     private float tradeSuccessRate           = 0.0f;
-    private float totalActiveAggressors       = 0.0f;
+    private float totalActiveAggressors      = 0.0f;
     private float averageOpponentHealth      = 0.0f;
     private float spacingPressure            = 0.0f;
     private float cornerEscapeConfidence     = 0.0f;
+    private float environmentalHazardRisk    = 0.0f;
 
     // ────────────────────────────────────────────────────────
     // ZONE II: INSTANTANEOUS BOSS REFLEXES (5 Fields)
     // ────────────────────────────────────────────────────────
     private float recentDamageSustained      = 0.0f;
     private float isPoiseProtected           = 0.0f;
+    public float cornered                    = 0.0f;
     private float animationRecovery          = -0.90f; // Safe fallback: block actions during frame endlag
     private float currentExecutionTicksNormalized = -0.30f; // Safe fallback: don't loop the same move mid-swing
     private float targetTrackingError        = 0.0f;
+    private float actionSpamTendency         = 0.0f;
+    private float lookingAtTarget            = 0.0f;
+    private float distanceToTarget           = 0.0f;
 
     // ────────────────────────────────────────────────────────
     // ZONE III: INSTANTANEOUS TARGET INTENTS (12 Fields)
@@ -41,6 +46,7 @@ public class ActionBuilder<T extends IAction>
     private float willCloseDistance          = 0.0f;
     private float willRetreat                = 0.0f;
     private float willFlank                  = 0.0f;
+    private float projectileSpamTendency     = 0.0f;
     private float willCombo                  = 0.0f;
     private float isVulnerable               = 0.0f;
     private float willUseSpecial             = 0.0f;
@@ -53,6 +59,7 @@ public class ActionBuilder<T extends IAction>
     private float defensiveTendency          = 0.0f;
     private float evasiveTendency            = 0.0f;
     private float panicFactor                = 0.0f;
+    private float projectileReliance         = 0.0f;
     private float predictability             = 0.0f;
 
 
@@ -74,13 +81,18 @@ public class ActionBuilder<T extends IAction>
                 this.averageOpponentHealth,
                 this.spacingPressure,
                 this.cornerEscapeConfidence,
+                this.environmentalHazardRisk,
 
                 // === ZONE II: INSTANTANEOUS BOSS REFLEXES (5 Columns) ===
                 this.recentDamageSustained,
                 this.isPoiseProtected,
+                this.cornered,
                 this.animationRecovery,
                 this.currentExecutionTicksNormalized,
                 this.targetTrackingError,
+                this.actionSpamTendency,
+                this.lookingAtTarget,
+                this.distanceToTarget,
 
                 // === ZONE III: INSTANTANEOUS TARGET INTENTS (12 Columns) ===
                 this.willAttack,
@@ -91,6 +103,7 @@ public class ActionBuilder<T extends IAction>
                 this.willCloseDistance,
                 this.willRetreat,
                 this.willFlank,
+                this.projectileSpamTendency,
                 this.willCombo,
                 this.isVulnerable,
                 this.willUseSpecial,
@@ -101,6 +114,7 @@ public class ActionBuilder<T extends IAction>
                 this.defensiveTendency,
                 this.evasiveTendency,
                 this.panicFactor,
+                this.projectileReliance,
                 this.predictability
         };
 
@@ -134,14 +148,28 @@ public class ActionBuilder<T extends IAction>
                 .herding();
     }
 
+    public ActionBuilder<T> closeIn(Operation op)
+    {
+        return this.advanced()
+                .distanceToTarget(op, 0.50f)
+                .herding();
+    }
+
     public ActionBuilder<T> zoning(Operation op) {
         return this.advanced()
                 .willCloseDistance(op, 0.90f)    // ★ PUNISH TARGETS RUSHING INWARD INTO RANGE ★
                 .willMove(op, 0.40f)             // Great tool to throw out when players are repositioning
                 .aggressiveTendency(op, 0.55f)  // Favored against highly relentless, aggressive players
+                .actionSpamTendency(op, 0.50f)
+                .distanceToTarget(op, 0.50f)
                 .spacingPressure(op, -0.40f)    // Suppressed if the player is already hugging our collision box
                 .targetTrackingError(op, -0.60f) // Strict spatial alignment required (don't whiff long range)
                 .herding();
+    }
+
+    public ActionBuilder<T> lookingAtTarget(Operation op, boolean val) {
+        return this.advanced()
+                .lookingAtTarget(op, val ? 1.0f : 0.0f).herding();
     }
 
     // 2. Core algebraic implementation
@@ -214,6 +242,46 @@ public class ActionBuilder<T extends IAction>
     public class Advanced {
         public Advanced relativeHealthRemaining(Operation op, float val) {
             ActionBuilder.this.relativeHealthRemaining = op.apply(ActionBuilder.this.relativeHealthRemaining, val);
+            return this;
+        }
+
+        public Advanced environmentalHazardRisk(Operation op, float val)
+        {
+            ActionBuilder.this.environmentalHazardRisk = op.apply(ActionBuilder.this.environmentalHazardRisk, val);
+            return this;
+        }
+
+        public Advanced distanceToTarget(Operation op, float val)
+        {
+            ActionBuilder.this.distanceToTarget = op.apply(ActionBuilder.this.distanceToTarget, val);
+            return this;
+        }
+
+        public Advanced lookingAtTarget(Operation op, float val) {
+            ActionBuilder.this.lookingAtTarget = op.apply(ActionBuilder.this.lookingAtTarget, val);
+            return this;
+        }
+
+        public Advanced cornered(Operation op, float val) {
+            ActionBuilder.this.cornered = op.apply(ActionBuilder.this.cornered, val);
+            return this;
+        }
+
+        public Advanced projectileReliance(Operation op, float val)
+        {
+            ActionBuilder.this.projectileReliance = op.apply(ActionBuilder.this.projectileReliance, val);
+            return this;
+        }
+
+        public Advanced projectileSpamTendency(Operation op, float val)
+        {
+            ActionBuilder.this.projectileSpamTendency = op.apply(ActionBuilder.this.projectileSpamTendency, val);
+            return this;
+        }
+
+        public Advanced actionSpamTendency(Operation op, float val)
+        {
+            ActionBuilder.this.actionSpamTendency = op.apply(ActionBuilder.this.actionSpamTendency, val);
             return this;
         }
 

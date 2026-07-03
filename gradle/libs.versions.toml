@@ -1,9 +1,9 @@
 [versions]
 #Core Mod Versions
-mod = "21.17.0.1"
+mod = "0.1"
 java = "21"
 
-releaseType = "alpha"
+releaseType = "release"
 
 # Minecraft
 minecraft = "1.21.1"
@@ -21,7 +21,7 @@ mixin = "0.8.7"
 
 # Plugins
 mcSafeResources = "0.0.2"
-modPublish = "1.1.0"
+modPublish = "2.1.1"
 
 # Dependencies
 epic-fight = "21.17.3.1-mc1.21.1-neoforge"
@@ -31,6 +31,11 @@ dummy = "1.21-2.0.12-neoforge"
 moonlight = "1.21-2.29.33-neoforge"
 forgeconfigapiport = "21.1.6"
 ldlib = "mc1.21.1-2.2.17-neoforge"
+battlearts = "test"
+
+## Parcool
+parcool = "1.21.1-3.4.3.3"
+epicparcool = "21.0.0-1.21.1"
 
 mimic-compile = "7760168"
 
@@ -43,7 +48,10 @@ battleArtsAPI = { module = "maven.modrinth:battle-arts-api", version.ref = "batt
 dummy = { group = "maven.modrinth", name = "mmmmmmmmmmmm", version.ref = "dummy"}
 moonlight = { group = "maven.modrinth", name = "moonlight", version.ref = "moonlight"}
 ldlib = {group = "maven.modrinth", name = "ldlib", version.ref = "ldlib"}
+barts = {group = "libs", name = "battlearts", version.ref = "battlearts"}
 mimic-compile = {group = "curse.maven", name = "epic-fight-the-mimic-1360684", version.ref = "mimic-compile"}
+parcool = {group = "maven.modrinth", name = "parcool", version.ref = "parcool"}
+epicparcool = {group = "maven.modrinth", name = "official-epic-x-parcool", version.ref = "epicparcool"}
 
 publisher = { module = "me.modmuss50.mod-publish-plugin:me.modmuss50.mod-publish-plugin.gradle.plugin", version.ref = "modPublish"}
 
@@ -55,4 +63,7 @@ moddevgradle = { id = "net.neoforged.moddev", version.ref = "moddevgradle" }
 mcSafeResources = { id = "dev.echoellet.mc-safe-resources", version.ref = "mcSafeResources" }
 
 [bundles]
+epicfight = ["epicFight", "battleArtsAPI", "epicskills", "barts"]
+parcool = ["parcool", "epicparcool"]
+
 dummyBundle = ["dummy", "moonlight"]

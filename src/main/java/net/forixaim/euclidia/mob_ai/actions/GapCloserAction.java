@@ -18,6 +18,12 @@ public class GapCloserAction implements IAction {
     }
 
     @Override
+    public boolean isGapCloser()
+    {
+        return true;
+    }
+
+    @Override
     public void start(LivingEntityPatch<?> entityPatch, AIController controller) {
         this.target = entityPatch.getTarget();
         entityPatch.playAnimationSynchronized(dashAnimationId, 0);
