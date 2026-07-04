@@ -6,6 +6,7 @@ import net.forixaim.euclidia.mob_ai.data.*;
 import net.forixaim.euclidia.registry.MatrixWeights;
 import net.minecraft.core.Holder;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.behavior.SetWalkTargetFromAttackTargetIfTargetOutOfReach;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
@@ -87,9 +88,15 @@ public class BossBrain
             }
         }
         if (!candidates.isEmpty()) {
-            return sampleStochastically(candidates, highestScore);
+            final float finalHighestScore = highestScore;
+            return sampleStochastically(candidates.stream().filter(candidate -> within(candidate.score(), finalHighestScore - TEMPERATURE, finalHighestScore + TEMPERATURE)).toList(), highestScore);
         }
         return controller.getDefaultFallbackAction();
+    }
+
+    private boolean within(float target, float min, float max)
+    {
+        return target >= min && target <= max;
     }
 
     private float getFromReward(AIController controller, Holder<IAction> action) {
@@ -97,6 +104,7 @@ public class BossBrain
     }
 
     private Holder<IAction> sampleStochastically(List<ActionCandidate> candidates, float highestScore) {
+
         double totalWeight = 0.0;
         List<Double> accumulatedWeights = new ArrayList<>();
         for (ActionCandidate candidate : candidates) {
@@ -189,13 +197,14 @@ public class BossBrain
             return;
         }
 
-        if (controller.isActionQueued())
+        if (controller.isActionQueued() || (controller.getActiveAction() != null && controller.getActiveAction().value().interruptible(boss, controller)))
             return;
 
         controller.setForceQueued(true);
         CompletableFuture.runAsync(() -> {
             try {
                 Holder<IAction> bestAction = this.selectBestAction(controller, multiDimensionalSnapshot, bossArchetypeBias);
+
                 controller.queueActionForMainThread(bestAction);
 
             } catch (Exception e) {

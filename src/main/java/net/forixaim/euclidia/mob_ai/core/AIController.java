@@ -30,6 +30,7 @@ import java.util.function.Predicate;
 
 public class AIController
 {
+    private static final int ACTION_TIMEOUT = 100;
     private final BossBrain bossBrain;
     private final LivingEntityPatch<?> original;
     private final Queue<Holder<IAction>> actionQueue = new ConcurrentLinkedQueue<>();
@@ -273,6 +274,9 @@ public class AIController
         if (activeAction != null) {
             activeAction.value().tick(original, this);
             ticksSinceActionStarted++;
+            if (ticksSinceActionStarted >= ACTION_TIMEOUT) {
+                stopAction();
+            }
         }
     }
 }

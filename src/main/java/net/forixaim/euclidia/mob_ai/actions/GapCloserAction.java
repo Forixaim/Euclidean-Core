@@ -1,7 +1,9 @@
 package net.forixaim.euclidia.mob_ai.actions;
 
 import net.forixaim.euclidia.mob_ai.core.AIController;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.phys.Vec3;
 import yesman.epicfight.api.animation.AnimationManager;
 import yesman.epicfight.api.animation.types.StaticAnimation;
@@ -25,26 +27,60 @@ public class GapCloserAction implements IAction {
 
     @Override
     public void start(LivingEntityPatch<?> entityPatch, AIController controller) {
-        this.target = entityPatch.getTarget();
-        entityPatch.playAnimationSynchronized(dashAnimationId, 0);
+        this.target = controller.getBossBrain().selectPrimaryTarget(controller.getBossBrain().getBossBias());
+        if (entityPatch.getOriginal() instanceof PathfinderMob finder)
+        {
+            finder.getNavigation().moveTo(target, 1.0 /* currently a dummy value to test */);
+        }
     }
 
     @Override
     public void tick(LivingEntityPatch<?> entityPatch, AIController controller) {
-        if (target == null) return;
+        if (target == null || !target.isAlive() || target.isRemoved()) {
+            controller.stopAction();
+            return;
+        }
 
-        LivingEntity boss = entityPatch.getOriginal();
-        
-        entityPatch.rotateTo(target, 0.0f, true);
+        if (entityPatch.getOriginal().distanceToSqr(target) < Mth.square(stopDistance)) {
+            controller.stopAction();
+            return;
+        }
 
-        Vec3 dashDirection = target.position().subtract(boss.position()).normalize();
-        if (boss.position().distanceTo(target.position()) > stopDistance) {
-            boss.setDeltaMovement(dashDirection.x * 0.4, boss.getDeltaMovement().y, dashDirection.z * 0.4);
+        if (entityPatch.getOriginal() instanceof PathfinderMob finder)
+        {
+            if (finder.hasLineOfSight(target))
+            {
+                Vec3 targetPos = target.position();
+                Vec3 bossPos = finder.position();
+
+                Vec3 direction = new Vec3(targetPos.x - bossPos.x, 0, targetPos.z - bossPos.z).normalize();
+
+                double dashSpeedCoefficient = 0.35D;
+                Vec3 currentMovement = finder.getDeltaMovement();
+
+                finder.setDeltaMovement(
+                        direction.x * dashSpeedCoefficient,
+                        currentMovement.y,
+                        direction.z * dashSpeedCoefficient
+                );
+
+                entityPatch.rotateTo(target, 360f, false);
+            } else
+            {
+                if (finder.tickCount % 5 == 0)
+                {
+                    finder.getNavigation().moveTo(target, 1.2D);
+                }
+            }
         }
     }
 
     @Override
     public void stop(LivingEntityPatch<?> entityPatch, AIController controller) {
+        if (entityPatch.getOriginal() instanceof PathfinderMob finder)
+        {
+            finder.getNavigation().stop();
+        }
         entityPatch.getOriginal().setDeltaMovement(0, entityPatch.getOriginal().getDeltaMovement().y, 0);
     }
 
